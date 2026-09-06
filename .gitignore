@@ -1,0 +1,8 @@
+/build/
+/build-macos/
+/dist/
+/output/*
+!/output/.gitkeep
+/models/*.onnx
+/data/known/*
+!/data/known/.gitkeep
