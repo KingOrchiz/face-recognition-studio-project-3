@@ -5,6 +5,9 @@
 #include <opencv2/objdetect.hpp>
 #include <opencv2/videoio.hpp>
 
+#include "FrameSource.hpp"
+#include "Logger.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -400,8 +403,9 @@ private:
 };
 
 static int runImage(const Options& o, FaceEngine& engine) {
-    cv::Mat image = cv::imread(o.input);
-    if (image.empty()) throw std::runtime_error("Cannot read image: " + o.input);
+    ImageSource source(o.input);
+    cv::Mat image;
+    source.read(image);
     const int count = engine.annotate(image, true);
     createOutputParent(o.output);
     if (!cv::imwrite(o.output, image)) throw std::runtime_error("Cannot write: " + o.output);
@@ -411,15 +415,15 @@ static int runImage(const Options& o, FaceEngine& engine) {
 }
 
 static int runStream(const Options& o, FaceEngine& engine) {
-    cv::VideoCapture capture;
-    if (o.mode == "camera") capture.open(o.input.empty() ? 0 : parseCameraIndex(o.input));
-    else capture.open(o.input);
-    if (!capture.isOpened()) throw std::runtime_error("Cannot open " + o.mode + " source");
+    std::unique_ptr<IFrameSource> source;
+    if (o.mode == "camera")
+        source = std::make_unique<CameraSource>(o.input.empty() ? 0 : parseCameraIndex(o.input));
+    else
+        source = std::make_unique<VideoSource>(o.input);
 
-    const int width = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_WIDTH));
-    const int height = static_cast<int>(capture.get(cv::CAP_PROP_FRAME_HEIGHT));
-    double fps = capture.get(cv::CAP_PROP_FPS);
-    if (fps <= 0 || fps > 240) fps = 25;
+    const int width = source->width();
+    const int height = source->height();
+    const double fps = source->fps();
     cv::VideoWriter writer;
     if (!o.output.empty()) {
         createOutputParent(o.output);
@@ -429,7 +433,7 @@ static int runStream(const Options& o, FaceEngine& engine) {
 
     cv::Mat frame;
     std::size_t frames = 0;
-    while (capture.read(frame)) {
+    while (source->read(frame)) {
         engine.annotate(frame);
         if (writer.isOpened()) writer.write(frame);
         ++frames;

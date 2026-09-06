@@ -17,7 +17,10 @@ else()
     set(FACE_STUDIO_YUNET_MODEL face_detection_yunet_2022mar.onnx)
 endif()
 
-add_executable(face_studio src/main.cpp)
+add_executable(face_studio
+    src/main.cpp
+    include/FrameSource.hpp
+    include/Logger.hpp)
 target_include_directories(face_studio PRIVATE include)
 target_link_libraries(face_studio PRIVATE ${OpenCV_LIBS})
 target_compile_options(face_studio PRIVATE -Wall -Wextra -Wpedantic)

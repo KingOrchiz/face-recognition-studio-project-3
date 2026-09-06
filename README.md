@@ -4,6 +4,11 @@ A C++17/OpenCV application for detecting and counting faces in images, videos,
 or a webcam stream. When labelled reference images are available, it uses SFace
 embeddings and cosine similarity to label matches; all other faces are `Unknown`.
 
+The input layer now implements a shared `IFrameSource` contract with concrete
+`ImageSource`, `VideoSource`, and `CameraSource` classes. See
+[`docs/ARCHITECTURE_PROGRESS.md`](docs/ARCHITECTURE_PROGRESS.md) for the verified
+implementation state and the remaining modular-refactor milestones.
+
 ## Build
 
 Dependencies: a C++17 compiler, CMake 3.16+, and OpenCV 4.5+ with the `core`,
